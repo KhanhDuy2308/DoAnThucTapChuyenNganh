@@ -3,7 +3,6 @@ const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const messageBox = document.getElementById('messageBox');
 const resultCard = document.getElementById('resultCard');
-
 const placeNameEl = document.getElementById('placeName');
 const placeRatingEl = document.getElementById('placeRating');
 const placeAddressEl = document.getElementById('placeAddress');
