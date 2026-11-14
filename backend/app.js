@@ -26,6 +26,7 @@ const { searchPlace, addReview } = require('./backend/controllers/placeControlle
 app.get('/api/places/search', searchPlace);
 app.post('/api/places/review', addReview); // Route nhận đánh giá từ giao diện gửi lên
 
+
 //others
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.use((req, res, next) => {

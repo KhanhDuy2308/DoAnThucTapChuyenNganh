@@ -24,9 +24,11 @@ app.get('/api/test', (req, res) => {
 });
 
 // route
-const { searchPlace, addReview } = require('./backend/controllers/placeController');
+const { searchPlace, addReview , updateReview , deleteReview } = require('./backend/controllers/placeController');
 app.get('/api/places/search', searchPlace);
 app.post('/api/places/review', addReview);
+app.put('/api/places/review/:id', updateReview);     // <-- Phải có dòng này cho PUT
+app.delete('/api/places/review/:id', deleteReview);   // <-- Phải có dòng này cho DELETE
 
 const PORT = 3000; 
 

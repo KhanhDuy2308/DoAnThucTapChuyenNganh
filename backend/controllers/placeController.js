@@ -78,3 +78,61 @@ const addReview = async (req, res) => {
 };
 
 module.exports = { searchPlace, addReview };
+
+
+
+
+
+
+
+
+// 3. API: PUT /api/places/review/:id (Sửa bình luận)
+const updateReview = async (req, res) => {
+  try {
+    const { id } = req.params; // Lấy ID của review từ URL
+    const { comment, rating } = req.body;
+
+    const updatedReview = await Review.findByIdAndUpdate(
+      id,
+      { comment, rating },
+      { new: true } // Trả về bản ghi sau khi đã cập nhật mới
+    );
+
+    if (!updatedReview) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy bình luận cần sửa!' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cập nhật bình luận thành công!',
+      data: updatedReview
+    });
+  } catch (error) {
+    console.error('Lỗi khi sửa bình luận:', error.message);
+    return res.status(500).json({ success: false, message: 'Lỗi server khi sửa bình luận' });
+  }
+};
+
+// 4. API: DELETE /api/places/review/:id (Xóa bình luận)
+const deleteReview = async (req, res) => {
+  try {
+    const { id } = req.params; // Lấy ID của review từ URL
+
+    const deletedReview = await Review.findByIdAndDelete(id);
+
+    if (!deletedReview) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy bình luận cần xóa!' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Xóa bình luận thành công!'
+    });
+  } catch (error) {
+    console.error('Lỗi khi xóa bình luận:', error.message);
+    return res.status(500).json({ success: false, message: 'Lỗi server khi xóa bình luận' });
+  }
+};
+
+// Nhớ xuất (export) thêm 2 hàm này ở cuối file
+module.exports = { searchPlace, addReview, updateReview, deleteReview };

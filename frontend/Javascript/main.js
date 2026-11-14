@@ -32,10 +32,18 @@ const renderReviews = (localReviews, googleReviews) => {
     const div = document.createElement('div');
     div.className = 'review-item';
     div.innerHTML = `
-      <strong>${rev.author || rev.userName || 'Ẩn danh'}</strong> - ⭐ ${rev.rating}/5
+     <strong>${rev.author || rev.userName || 'Ẩn danh'}</strong> - ⭐ ${rev.rating}/5
       <span class="review-source source-local">Đánh giá trên Web</span>
       <p>${rev.comment}</p>
+      
+      <!-- Thêm cụm nút Sửa và Xóa -->
+      <div class="review-actions" style="margin-top: 8px;">
+        <button onclick="editReview('${rev._id}', '${rev.comment}')" style="background: #f39c12; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px;">Sửa</button>
+        <button onclick="deleteReview('${rev._id}')" style="background: #e74c3c; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;">Xóa</button>
+      </div>
     `;
+
+    
     reviewsListEl.appendChild(div);
   });
 
@@ -149,3 +157,65 @@ searchBtn.addEventListener('click', handleSearch);
 searchInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') handleSearch();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+// Xử lý Xóa bình luận
+async function deleteReview(reviewId) {
+  if (!confirm('Bạn có chắc chắn muốn xóa bình luận này không?')) return;
+
+  try {
+    const res = await fetch(`http://localhost:3000/api/places/review/${reviewId}`, {
+      method: 'DELETE'
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      alert('Đã xóa bình luận thành công!');
+      handleSearch(); // Load lại kết quả tìm kiếm để cập nhật giao diện
+    } else {
+      alert(result.message);
+    }
+  } catch (error) {
+    console.error('Lỗi khi xóa:', error);
+    alert('Không thể kết nối đến server để xóa.');
+  }
+}
+
+// Xử lý Sửa bình luận (dùng prompt đơn giản hoặc mở modal)
+async function editReview(reviewId, oldComment) {
+  const newComment = prompt('Nhập nội dung bình luận mới của bạn:', oldComment);
+  if (newComment === null) return; // Người dùng bấm Cancel
+  if (!newComment.trim()) {
+    alert('Nội dung bình luận không được để trống!');
+    return;
+  }
+
+  try {
+    const res = await fetch(`http://localhost:3000/api/places/review/${reviewId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment: newComment.trim() })
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      alert('Cập nhật bình luận thành công!');
+      handleSearch(); // Load lại kết quả tìm kiếm
+    } else {
+      alert(result.message);
+    }
+  } catch (error) {
+    console.error('Lỗi khi sửa:', error);
+    alert('Không thể kết nối đến server để sửa.');
+  }
+}
