@@ -48,22 +48,22 @@ const searchPlace = async (req, res) => {
 // API: POST /api/places/review
 const addReview = async (req, res) => {
   try {
-    const { placeId, placeName, userName, author, rating, comment } = req.body;
+    const { placeId, placeName, userName, author, rating, comment, userId } = req.body; // <--- Phải nhận thêm userId ở đây
 
     if (!placeId || !comment || !rating) {
       return res.status(400).json({ success: false, message: 'Thiếu thông tin đánh giá!' });
     }
 
-    // Lấy tên tác giả ưu tiên từ author hoặc userName, nếu không có thì là 'Khách'
     const finalAuthor = author || userName || 'Khách';
 
     const newReview = await Review.create({
       placeId,
       placeName,
-      author: finalAuthor,     // Khớp tuyệt đối với schema MongoDB
-      userName: finalAuthor,   // Lưu luôn để tương thích ngược nếu frontend đọc field này
+      author: finalAuthor,
+      userName: finalAuthor,
       rating: Number(rating),
-      comment
+      comment,
+      userId: userId || 'anonymous' // <--- Phải lưu userId vào đây thì DB mới ghi nhận
     });
 
     return res.status(201).json({
@@ -89,27 +89,32 @@ module.exports = { searchPlace, addReview };
 // 3. API: PUT /api/places/review/:id (Sửa bình luận)
 const updateReview = async (req, res) => {
   try {
-    const { id } = req.params; // Lấy ID của review từ URL
-    const { comment, rating } = req.body;
+    const { id } = req.params;
+    const { comment, userId } = req.body;
+
 
     const updatedReview = await Review.findByIdAndUpdate(
       id,
-      { comment, rating },
-      { new: true } // Trả về bản ghi sau khi đã cập nhật mới
+      { comment }, // Cập nhật lại nội dung comment
+      { new: true } 
     );
 
-    if (!updatedReview) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy bình luận cần sửa!' });
+    const review = await Review.findById(id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy bình luận!' });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Cập nhật bình luận thành công!',
-      data: updatedReview
-    });
+    // Kiểm tra quyền (nếu cần bảo mật chặt chẽ ở tầng server)
+    // if (review.userId && review.userId !== userId) {
+    //   return res.status(403).json({ success: false, message: 'Bạn không có quyền sửa bình luận này!' });
+    // }
+
+    review.comment = comment || review.comment;
+    await review.save();
+
+    return res.status(200).json({ success: true, message: 'Cập nhật thành công!', data: review });
   } catch (error) {
-    console.error('Lỗi khi sửa bình luận:', error.message);
-    return res.status(500).json({ success: false, message: 'Lỗi server khi sửa bình luận' });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

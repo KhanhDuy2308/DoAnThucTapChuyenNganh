@@ -14,6 +14,13 @@ const submitReviewBtn = document.getElementById('submitReviewBtn');
 
 let currentPlace = null; // Lưu thông tin quán đang xem
 
+// Lấy hoặc tạo một clientId duy nhất cho trình duyệt này
+let myClientId = localStorage.getItem('app_client_id');
+if (!myClientId) {
+  myClientId = 'user_' + Math.random().toString(36).substring(2, 15);
+  localStorage.setItem('app_client_id', myClientId);
+}
+
 const showMessage = (text, type = 'error') => {
   messageBox.textContent = text;
   messageBox.className = `message ${type}`;
@@ -31,17 +38,21 @@ const renderReviews = (localReviews, googleReviews) => {
   localReviews.forEach((rev) => {
     const div = document.createElement('div');
     div.className = 'review-item';
-    div.innerHTML = `
-     <strong>${rev.author || rev.userName || 'Ẩn danh'}</strong> - ⭐ ${rev.rating}/5
-      <span class="review-source source-local">Đánh giá trên Web</span>
-      <p>${rev.comment}</p>
-      
-      <!-- Thêm cụm nút Sửa và Xóa -->
+    // Kiểm tra xem comment này có phải do chính trình duyệt này viết không
+  const isOwner = rev.userId === myClientId;
+ div.innerHTML = `
+    <strong>${rev.author || 'Ẩn danh'}</strong> - ⭐ ${rev.rating}/5
+    <span class="review-source source-local">Đánh giá trên Web</span>
+    <p>${rev.comment}</p>
+    
+    <!-- Chỉ hiện nút Sửa/Xóa nếu là chính chủ (isOwner = true) -->
+    ${isOwner ? `
       <div class="review-actions" style="margin-top: 8px;">
         <button onclick="editReview('${rev._id}', '${rev.comment}')" style="background: #f39c12; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px;">Sửa</button>
         <button onclick="deleteReview('${rev._id}')" style="background: #e74c3c; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;">Xóa</button>
       </div>
-    `;
+    ` : ''}
+  `;
 
     
     reviewsListEl.appendChild(div);
@@ -133,7 +144,8 @@ submitReviewBtn.addEventListener('click', async () => {
         placeId: currentPlace.placeId,
         author: author,   // Khớp hoàn toàn với schema MongoDB (author)
         rating: rating,
-        comment: comment
+        comment: comment,
+        userId: myClientId
       })
     });
 
